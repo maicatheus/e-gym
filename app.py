@@ -18,8 +18,14 @@ while True:
         ret, frame = camera.read()
         frameRgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         results = pose.process(frameRgb)
+        body = []
         if results.pose_landmarks:
+            for index, lm in enumerate(results.pose_landmarks.landmark):
+                h, w, _ = frame.shape
+                cx , cy = int(lm.x*w), int(lm.y*h)
+                body.append((cx,cy))
             mpDraw.draw_landmarks(frame, results.pose_landmarks, mpPose.POSE_CONNECTIONS)
+
         
         cTime = time.time()
         fps = 1/(cTime - pTime)
