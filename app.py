@@ -1,6 +1,6 @@
 import cv2
 import mediapipe as mp
-import threading
+import math
 import time
 
 def exercicioFlexao(body):
@@ -15,7 +15,30 @@ def exercicioFlexao(body):
         cimaFlag = False
 
 def exercicioAbdominal(body):
-    pass
+    try:
+        cintura = body[24]
+        theta = 30
+        y2 = 0
+        x1,y1 = cintura[0], cintura[1]
+        x2 = ((y1 - y2)* math.cos(theta) + x1 * math.sin(theta))/math.sin(theta)
+        nariz = body[0]
+        a = (y1 - y2)
+        b = (x2 - x1)
+        c = (x1*y2 - y1*x2)
+        
+        d = (abs(a*nariz[0] + b*nariz[1] + c))/math.sqrt(a**2 + b**2)
+        print(f"distancia nariz reta: {d}")
+        if(d <=0 and abdmFlag):
+            abdmFlag = False
+            abdmCount += 1
+        
+        if(d > 50 and not abdmFlag):
+            abdmFlag = True
+            
+        return(int(x2),y2)
+    except:
+        return (0,0)
+
 def tipoExercicio(body):
     mao = body[16][1]
     cintura = body[24][1]
@@ -36,7 +59,9 @@ thickness = 3
 linhaHorizonte = 235
 
 cimaFlag = True
+abdmFlag = True
 flexCount = 0
+abdmCount = 0
 
 mpDraw = mp.solutions.drawing_utils
 mpPose = mp.solutions.pose
@@ -60,14 +85,19 @@ while True:
         pTime = cTime
         if(tipo == "flexao"):
             exercicioFlexao(body)
+            cv2.line(frame, (0,linhaHorizonte), (700,linhaHorizonte), color, 1)
+            cv2.putText(frame,str(f"Flex count: {int(flexCount)}"),(0,140),font,scale,color,thickness)
+
         if(tipo == "Abdominal"):
-            exercicioAbdominal(body)
+            retaAbdominal = exercicioAbdominal(body)
+            cv2.line(frame, body[24],retaAbdominal , color, 3)
+            cv2.putText(frame,str(f"abdom. count: {int(abdmCount)}"),(0,140),font,scale,color,thickness)
+
+
         cv2.putText(frame,str(f"FPS: {int(fps)}"),(0,40),font,scale,color,thickness)
         cv2.putText(frame,str(f"exercicio: {tipo}"),(0,100),font,scale,color,thickness)
-        cv2.putText(frame,str(f"count: {int(flexCount)}"),(0,140),font,scale,color,thickness)
 
 
-        cv2.line(frame, (0,linhaHorizonte), (700,linhaHorizonte), color, 1)
 
         cv2.imshow("e-gym", frame)
 
